@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Nixie Rockola - iPad 3 Edition</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: #0a0502;
+      color: #ff6600;
+      font-family: 'Share Tech Mono', monospace;
+      height: 100vh;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 800px;
+      background: #1a0f0a;
+      border: 4px solid #2a1810;
+      border-radius: 20px;
+      padding: 15px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    }
+
+    .screen-area {
+      background: #000;
+      border: 2px solid #3d1a0a;
+      border-radius: 10px;
+      position: relative;
+      padding-top: 56.25%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #player {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: -webkit-flex;
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      -webkit-flex: 1;
+      flex: 1;
+      background: #050201;
+      border: 2px solid #441100;
+      color: #ff6600;
+      padding: 12px;
+      font-size: 18px;
+      font-family: inherit;
+      border-radius: 8px;
+      outline: none;
+      text-shadow: 0 0 5px rgba(255, 102, 0, 0.5);
+      -webkit-appearance: none;
+    }
+
+    button {
+      background: #331100;
+      border: 2px solid #552200;
+      color: #ff6600;
+      padding: 0 20px;
+      font-family: inherit;
+      font-size: 16px;
+      border-radius: 8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    button:active { background: #552200; }
+
+    .status-bar {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #883300;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    .glow {
+      text-shadow: 0 0 10px rgba(255, 102, 0, 0.7), 0 0 2px #ffaa00;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="screen-area">
+      <div id="player"></div>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="videoQuery" placeholder="ID O URL DE YOUTUBE..." />
+      <button onclick="searchAndPlay()" class="glow">LOAD</button>
+    </div>
+
+    <div class="status-bar glow" id="status">SISTEMA NIXIE V1.1 - ESPERANDO ORIGEN</div>
+  </div>
+
+  <script>
+    var player;
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '100%',
+        width: '100%',
+        videoId: '5qap5aO4i9A', 
+        playerVars: {
+          'autoplay': 0,
+          'controls': 1,
+          'playsinline': 1,
+          'rel': 0,
+          'enablejsapi': 1,
+          'origin': location.protocol + '//' + location.hostname
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onError': onPlayerError
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      document.getElementById('status').textContent = "ROCKOLA LISTA - TOCA LA PANTALLA";
+    }
+
+    function onPlayerError(e) {
+      document.getElementById('status').textContent = "ERROR " + e.data + " - PRUEBA OTRO VIDEO";
+    }
+
+    function searchAndPlay() {
+      var input = document.getElementById('videoQuery').value.trim();
+      var videoId = extractVideoID(input);
+
+      if (videoId && player) {
+        document.getElementById('status').textContent = "SINTONIZANDO: " + videoId;
+        
+        // El método cue es más seguro para navegadores viejos
+        player.cueVideoById(videoId);
+        
+        // Intento de reproducción tras carga
+        setTimeout(function() {
+          player.playVideo();
+        }, 1200);
+      } else {
+        document.getElementById('status').textContent = "ID INVÁLIDO";
+      }
+    }
+
+    function extractVideoID(url) {
+      var regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      var match = url.match(regExp);
+      return (match && match[2].length == 11) ? match[2] : (url.length == 11 ? url : null);
+    }
+
+    document.getElementById('videoQuery').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') searchAndPlay();
+    });
+  </script>
+</body>
+</html>
